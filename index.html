@@ -4,10 +4,17 @@
     <title>Pet the Kitty</title>
     <style>
         #target {
-            width: 100px; /* Kitty size */
-            height: 100px;
+            width: 150px;
+            height: 150px;
             position: absolute;
             cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #target img {
+            width: 125px;
+            height: 125px;
         }
         .popup {
             position: fixed;
@@ -17,7 +24,7 @@
             z-index: 1000;
         }
         .popup img {
-            max-width: 300px; /* Bigger popup size */
+            max-width: 300px;
             max-height: 300px;
         }
         .close-btn {
@@ -29,8 +36,8 @@
             background: red;
             color: white;
             font-size: 20px;
-            line-height: 25px; /* Center the "x" vertically */
-            text-align: center; /* Center the "x" horizontally */
+            line-height: 25px;
+            text-align: center;
             border: none;
             cursor: pointer;
         }
@@ -38,13 +45,16 @@
 </head>
 <body>
     <h1>Pet the Kitty!</h1>
-    <p>Pets: <span id="pets">0</span></p>
-    <img id="target" src="https://i.ibb.co/21zF9VLc/Pngtree-british-shorthair-cat-head-front-5790490.png" alt="Kitty" onclick="petKitty()">
+    <p>Pets: <span id="pets">0</span> | High Score: <span id="highScore">0</span></p>
+    <div id="target" onclick="petKitty()">
+        <img src="https://i.ibb.co/21zF9VLc/Pngtree-british-shorthair-cat-head-front-5790490.png" alt="Kitty">
+    </div>
 
     <script>
         let pets = 0;
         let target = document.getElementById("target");
         let petsDisplay = document.getElementById("pets");
+        let highScoreDisplay = document.getElementById("highScore");
         let x = 0;
         let y = 0;
         let baseSpeedX = 2;
@@ -52,13 +62,15 @@
         let speedX = baseSpeedX;
         let speedY = baseSpeedY;
         let lastSpeedIncrease = 0;
-        let popupInterval = 30000; // Start with 30 seconds
+        let popupInterval = 30000;
         let intervalId = null;
 
-        // Audio for meow sound
         let meowSound = new Audio("https://files.catbox.moe/qgw9jk.mp3");
 
-        // Array of random cat image URLs
+        // Load high score from localStorage, default to 0 if not set
+        let highScore = parseInt(localStorage.getItem("highScore")) || 0;
+        highScoreDisplay.textContent = highScore;
+
         const catImages = [
             "https://i.pinimg.com/736x/c1/27/9b/c1279b4d549f389ef9db944dc22c07f7.jpg",
             "https://i.pinimg.com/736x/94/be/1e/94be1e4aacd780781a13f081f721f016.jpg",
@@ -74,22 +86,26 @@
             pets = pets + 1;
             petsDisplay.textContent = pets;
 
-            // Play meow sound
             meowSound.currentTime = 0;
             meowSound.play();
 
-            // Speed up every 4 pets
             if (pets % 4 === 0 && pets > lastSpeedIncrease) {
                 speedX = speedX * 1.1;
                 speedY = speedY * 1.1;
                 lastSpeedIncrease = pets;
             }
 
-            // Decrease popup interval every 10 pets (minimum 5 seconds)
             if (pets % 4 === 0) {
-                popupInterval = Math.max(5000, popupInterval * 0.5); // Reduce by 10%, min 5s
+                popupInterval = Math.max(5000, popupInterval * 0.5);
                 clearInterval(intervalId);
                 intervalId = setInterval(createCatPopup, popupInterval);
+            }
+
+            // Update high score if current pets exceed it
+            if (pets > highScore) {
+                highScore = pets;
+                highScoreDisplay.textContent = highScore;
+                localStorage.setItem("highScore", highScore);
             }
         }
 
@@ -97,10 +113,10 @@
             x = x + speedX;
             y = y + speedY;
 
-            if (x + 50 > window.innerWidth || x < 0) {
+            if (x + 150 > window.innerWidth || x < 0) {
                 speedX = -speedX;
             }
-            if (y + 50 > window.innerHeight || y < 0) {
+            if (y + 150 > window.innerHeight || y < 0) {
                 speedY = -speedY;
             }
 
@@ -110,7 +126,6 @@
             requestAnimationFrame(moveTarget);
         }
 
-        // Function to create a random cat popup
         function createCatPopup() {
             const popup = document.createElement("div");
             popup.className = "popup";
@@ -128,23 +143,22 @@
             popup.appendChild(catImg);
             popup.appendChild(closeBtn);
 
-            // Randomly position on one of the four sides
-            const side = Math.floor(Math.random() * 4); // 0: top, 1: right, 2: bottom, 3: left
-            const offset = 20; // Distance from edge
+            const side = Math.floor(Math.random() * 4);
+            const offset = 20;
             switch (side) {
-                case 0: // Top
+                case 0:
                     popup.style.top = offset + "px";
-                    popup.style.left = Math.random() * (window.innerWidth - 320) + "px"; // 320 accounts for popup width
+                    popup.style.left = Math.random() * (window.innerWidth - 320) + "px";
                     break;
-                case 1: // Right
+                case 1:
                     popup.style.right = offset + "px";
                     popup.style.top = Math.random() * (window.innerHeight - 320) + "px";
                     break;
-                case 2: // Bottom
+                case 2:
                     popup.style.bottom = offset + "px";
                     popup.style.left = Math.random() * (window.innerWidth - 320) + "px";
                     break;
-                case 3: // Left
+                case 3:
                     popup.style.left = offset + "px";
                     popup.style.top = Math.random() * (window.innerHeight - 320) + "px";
                     break;
@@ -153,12 +167,10 @@
             document.body.appendChild(popup);
         }
 
-        // Start popup interval
         intervalId = setInterval(createCatPopup, popupInterval);
 
-        // Initial kitty positioning and movement
-        x = Math.floor(Math.random() * (window.innerWidth - 50));
-        y = Math.floor(Math.random() * (window.innerHeight - 50));
+        x = Math.floor(Math.random() * (window.innerWidth - 150));
+        y = Math.floor(Math.random() * (window.innerHeight - 150));
         target.style.left = x + "px";
         target.style.top = y + "px";
 
